@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#167d58"><title>টোটো সাথী</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f7f5;color:#15251e;font-family:system-ui,"Noto Sans Bengali",sans-serif}header{background:linear-gradient(135deg,#0b4935,#167d58);color:white;padding:22px 16px;border-radius:0 0 22px 22px}h1{margin:0;font-size:24px}header p{margin:5px 0}main{max-width:700px;margin:auto;padding:14px}.tabs{display:flex;gap:8px;margin-bottom:14px}.tabs button{flex:1;padding:11px;border:1px solid #dce7e1;border-radius:11px;background:white;font-weight:bold}.tabs .active,.btn{background:#167d58;color:white}.card{background:white;border:1px solid #dce7e1;border-radius:16px;padding:16px;margin-bottom:13px}.hidden{display:none!important}h2{font-size:19px;margin:0 0 14px}.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}label{font-size:13px;font-weight:bold}input{padding:12px;border:1px solid #cbd9d1;border-radius:10px;font:inherit}.btn{width:100%;padding:13px;border:0;border-radius:11px;font:inherit;font-weight:bold;cursor:pointer}.alt{background:#e6f2eb;color:#0b4935}.notice{padding:12px;border:1px solid #f0dfad;background:#fff6df;border-radius:11px;font-size:13px;line-height:1.5;margin-bottom:12px}.muted{font-size:13px;color:#617168;line-height:1.5}.item{border:1px solid #dce7e1;border-radius:12px;padding:12px;margin-top:10px}.top{display:flex;justify-content:space-between;gap:8px;align-items:center}.pill{background:#e7f5ed;color:#126143;padding:5px 8px;border-radius:20px;font-size:12px}.item p{font-size:14px;margin:7px 0}.actions{display:flex;gap:8px;margin-top:10px}.actions button{flex:1;padding:9px;border:0;border-radius:8px;background:#e7f5ed;font-weight:bold}.actions .red{background:#fbeaea;color:#922}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#f2f8f4;padding:10px;border-radius:10px}.stat strong{display:block;font-size:21px}footer{text-align:center;color:#617168;font-size:12px;padding:12px}
+</style></head><body>
+<header><h1>🛺 টোটো সাথী</h1><p>প্যাসেঞ্জার বুকিং • অ্যাডমিন পরিচালনা</p></header><main>
+<div class="tabs"><button id="passTab" class="active">🧍 প্যাসেঞ্জার বুকিং</button><button id="adminTab">🛠️ অ্যাডমিন</button></div>
+<section id="passenger"><div class="card"><h2>নিজে টোটো বুক করুন</h2><form id="bookingForm">
+<div class="field"><label for="name">আপনার নাম *</label><input id="name" maxlength="80" required></div>
+<div class="field"><label for="phone">মোবাইল নম্বর *</label><input id="phone" maxlength="20" inputmode="tel" required></div>
+<div class="field"><label for="pickup">কোথা থেকে উঠবেন? *</label><input id="pickup" maxlength="180" required></div>
+<div class="field"><label for="destination">কোথায় যাবেন? *</label><input id="destination" maxlength="180" required></div>
+<div class="field"><label for="date">তারিখ *</label><input id="date" type="date" required></div>
+<div class="field"><label for="time">সময় *</label><input id="time" type="time" required></div>
+<div class="field"><label for="notes">অতিরিক্ত তথ্য (ঐচ্ছিক)</label><input id="notes" maxlength="300"></div>
+<button class="btn" type="submit">বুকিং পাঠান</button></form></div>
+<div class="notice">বুকিং পাঠালে অ্যাডমিন নিশ্চিত করবেন। Firebase config বসানো ও নিরাপত্তা নিয়ম প্রকাশ না করা পর্যন্ত বুকিং অনলাইনে কাজ করবে না।</div></section>
+<section id="admin" class="hidden"><div class="card" id="loginCard"><h2>অ্যাডমিন লগইন</h2><p class="muted">শুধু অনুমোদিত অ্যাডমিন অ্যাকাউন্ট ব্যবহার করুন।</p><form id="loginForm"><div class="field"><label for="email">অ্যাডমিন ইমেল</label><input id="email" type="email" required></div><div class="field"><label for="password">পাসওয়ার্ড</label><input id="password" type="password" required></div><button class="btn">লগইন</button></form></div>
+<div class="card hidden" id="dashboard"><div class="top"><h2>বুকিং পরিচালনা</h2><button class="btn alt" id="logout" style="width:auto">লগআউট</button></div><div class="stats"><div class="stat"><strong id="total">0</strong>মোট</div><div class="stat"><strong id="pending">0</strong>অপেক্ষমাণ</div><div class="stat"><strong id="confirmed">0</strong>নিশ্চিত</div></div><div id="adminBookings"></div><p id="noBookings" class="muted">এখনও বুকিং নেই।</p></div></section>
+<footer>টোটো সাথী • Firebase starter</footer></main>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {getFirestore,collection,addDoc,serverTimestamp,query,orderBy,onSnapshot,doc,updateDoc} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+/* Firebase Console > Project settings > Your apps > SDK config থেকে নিজের মান বসান। */
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyALfZ1em1EbRfW53EKd_ZHQDK-BONj6pGg",
+  authDomain: "toto-sathi.firebaseapp.com",
+  databaseURL: "https://toto-sathi-default-rtdb.firebaseio.com",
+  projectId: "toto-sathi",
+  storageBucket: "toto-sathi.firebasestorage.app",
+  messagingSenderId: "100276156047",
+  appId: "1:100276156047:web:82cf9a8296711ad695e2fa",
+  measurementId: "G-B3FVH9D41C"
+}; firebaseConfig={apiKey:"REPLACE_API_KEY",authDomain:"REPLACE_PROJECT.firebaseapp.com",projectId:"REPLACE_PROJECT_ID",storageBucket:"REPLACE_PROJECT.appspot.com",messagingSenderId:"REPLACE_SENDER_ID",appId:"REPLACE_APP_ID"};
+const ready=!Object.values(firebaseConfig).some(v=>v.startsWith("REPLACE_"));let db,auth,stop=null;const $=id=>document.getElementById(id);
+const now=new Date();$("date").value=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+$("passTab").onclick=()=>tab("passenger");$("adminTab").onclick=()=>tab("admin");function tab(t){$("passenger").classList.toggle("hidden",t!=="passenger");$("admin").classList.toggle("hidden",t!=="admin");$("passTab").classList.toggle("active",t==="passenger");$("adminTab").classList.toggle("active",t==="admin")}
+function check(){if(!ready){alert("Firebase config বসানো হয়নি। README-BN.txt দেখুন।");return false}return true}
+if(ready){const app=initializeApp(firebaseConfig);db=getFirestore(app);auth=getAuth(app)}
+$("bookingForm").onsubmit=async e=>{e.preventDefault();if(!check())return;const btn=e.submitter;btn.disabled=true;try{await addDoc(collection(db,"bookings"),{name:$("name").value.trim(),phone:$("phone").value.trim(),pickup:$("pickup").value.trim(),destination:$("destination").value.trim(),date:$("date").value,time:$("time").value,notes:$("notes").value.trim(),status:"pending",source:"passenger_link",createdAt:serverTimestamp()});alert("বুকিং পাঠানো হয়েছে। অ্যাডমিন নিশ্চিত করলে যোগাযোগ করবেন।");e.target.reset()}catch(err){console.error(err);alert("বুকিং পাঠানো যায়নি। Firebase setup ও Rules দেখুন।")}finally{btn.disabled=false}};
+$("loginForm").onsubmit=async e=>{e.preventDefault();if(!check())return;try{await signInWithEmailAndPassword(auth,$("email").value.trim(),$("password").value)}catch(err){console.error(err);alert("লগইন ব্যর্থ। Authentication এবং ইমেল/পাসওয়ার্ড পরীক্ষা করুন।")}};
+$("logout").onclick=()=>signOut(auth);
+if(ready)onAuthStateChanged(auth,user=>{$("loginCard").classList.toggle("hidden",!!user);$("dashboard").classList.add("hidden");if(stop){stop();stop=null}if(user){$("dashboard").classList.remove("hidden");stop=onSnapshot(query(collection(db,"bookings"),orderBy("createdAt","desc")),snap=>{const rows=snap.docs.map(d=>({id:d.id,...d.data()}));$("total").textContent=rows.length;$("pending").textContent=rows.filter(b=>b.status==="pending").length;$("confirmed").textContent=rows.filter(b=>b.status==="confirmed").length;$("noBookings").classList.toggle("hidden",rows.length>0);$("adminBookings").innerHTML="";for(const b of rows){const el=document.createElement("div");el.className="item";const status=b.status==="confirmed"?"নিশ্চিত":b.status==="cancelled"?"বাতিল":"অপেক্ষমাণ";el.innerHTML=`<div class="top"><b>${esc(b.name)}</b><span class="pill">${status}</span></div><p>📞 ${esc(b.phone)}</p><p>📍 ${esc(b.pickup)} → ${esc(b.destination)}</p><p>🗓 ${esc(b.date)} · 🕒 ${esc(b.time)}</p>${b.notes?`<p>📝 ${esc(b.notes)}</p>`:""}<div class="actions"><button data-s="confirmed" data-id="${b.id}">নিশ্চিত করুন</button><button class="red" data-s="cancelled" data-id="${b.id}">বাতিল</button></div>`;$("adminBookings").appendChild(el)}document.querySelectorAll("[data-s]").forEach(btn=>btn.onclick=async()=>{try{await updateDoc(doc(db,"bookings",btn.dataset.id),{status:btn.dataset.s,updatedAt:serverTimestamp()})}catch(err){console.error(err);alert("পরিবর্তন করা যায়নি; admin allowlist ও rules পরীক্ষা করুন।")}})},err=>{console.error(err);alert("বুকিং পড়া যায়নি; Firestore rules এবং admins UID পরীক্ষা করুন।")})}});
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+if(new URLSearchParams(location.search).get("admin")==="1")tab("admin");
+</script></body></html>
